@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Kuis - Limit Fungsi</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+            startup: { typeset: true } 
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h2>Laporan Hasil Kuis</h2>
+    
+    <div id="score-circle" class="score-circle">0</div>
+    <h3 id="pass-status"></h3>
+    <p id="result-message" style="margin-bottom: 20px; color: var(--text-muted); text-align: center;"></p>
+
+    <!-- Panel Analisis Pencapaian -->
+    <div class="info-panel" style="background: #f8fafc; border-color: #cbd5e1;">
+        <h4 style="margin-bottom: 10px; text-align: center; color: var(--primary);">Statistik Pengerjaan</h4>
+        <ul style="list-style-type: none; margin-left: 0;">
+            <li>⏱️ <strong>Waktu Dihabiskan:</strong> <span id="report-time"></span></li>
+            <li>✅ <strong>Jawaban Benar:</strong> <span id="report-correct"></span> / 10</li>
+            <li>❌ <strong>Jawaban Salah:</strong> <span id="report-wrong"></span> / 10</li>
+            <li id="report-weakness" style="margin-top: 10px; color: var(--danger); display: none;"></li>
+        </ul>
+    </div>
+    
+    <h3 style="margin-top: 30px;">Pembahasan Step-by-Step</h3>
+    <div id="explanations-container"></div>
+    
+    <button class="btn-main" onclick="window.location.href='index.html'">Selesai & Kembali ke Beranda</button>
+</div>
+
+<script>
+    window.onload = function() {
+        // Tarik data dari sessionStorage
+        let score = parseInt(sessionStorage.getItem("quizScore") || "0");
+        let correctCount = sessionStorage.getItem("correctCount");
+        let wrongCount = sessionStorage.getItem("wrongCount");
+        let timeElapsed = parseInt(sessionStorage.getItem("timeElapsed") || "0");
+        let isTimeout = sessionStorage.getItem("isTimeout") === "true";
+        let history = JSON.parse(sessionStorage.getItem("quizHistory") || "[]");
+
+        // Set UI Skor & Kelulusan
+        let circle = document.getElementById('score-circle');
+        circle.innerText = score;
+        
+        let passStatus = document.getElementById('pass-status');
+        let message = document.getElementById('result-message');
+
+        if (isTimeout) {
+            circle.classList.add('failed');
+            passStatus.innerText = "⏳ WAKTU HABIS!";
+            passStatus.style.color = "var(--danger)";
+            message.innerText = `Kamu tidak berhasil menyelesaikan kuis tepat waktu.`;
+        } else if (score >= 80) {
+            circle.classList.add('passed');
+            passStatus.innerText = "🎉 SELAMAT, ANDA LULUS!";
+            passStatus.style.color = "var(--success)";
+            message.innerText = "Penguasaan materimu sangat baik, siap untuk menghadapi ujian sesungguhnya.";
+        } else {
+            circle.classList.add('failed');
+            passStatus.innerText = "💪 JANGAN MENYERAH!";
+            passStatus.style.color = "var(--danger)";
+            message.innerText = "Kamu butuh minimal skor 80 (8 Benar) untuk lulus kriteria penguasaan materi.";
+        }
+
+        // Hitung waktu dalam format menit:detik
+        let m = Math.floor(timeElapsed / 60); let s = timeElapsed % 60;
+        document.getElementById('report-time').innerText = `${m} menit ${s} detik`;
+        document.getElementById('report-correct').innerText = correctCount;
+        document.getElementById('report-wrong').innerText = wrongCount;
+
+        // Analisis Titik Lemah (Topik yang paling banyak salah dijawab)
+        let mistakesByLevel = { 1: 0, 2: 0, 3: 0 };
+        history.forEach(item => {
+            if(!item.isCorrect) mistakesByLevel[item.level]++;
+        });
+
+        // Cari level dengan kesalahan terbanyak
+        let maxMistakes = 0;
+        let weakLevel = null;
+        for (let level in mistakesByLevel) {
+            if (mistakesByLevel[level] > maxMistakes) {
+                maxMistakes = mistakesByLevel[level];
+                weakLevel = level;
+            }
+        }
+
+        if (maxMistakes > 0) {
+            let topicName = weakLevel === '1' ? "Pemfaktoran Aljabar" : weakLevel === '2' ? "Bentuk Akar Sekawan" : "Trigonometri Dasar";
+            let weakEl = document.getElementById('report-weakness');
+            weakEl.style.display = "block";
+            weakEl.innerHTML = `⚠️ <strong>Evaluasi:</strong> Kamu paling sering terkecoh di soal tipe <strong>Limit ${topicName}</strong>. Disarankan untuk memantapkan ulang konsep materi ini.`;
+        }
+
+        // Render Pembahasan
+        let html = '';
+        history.forEach(item => {
+            let statusText = item.isCorrect 
+                ? `<span style="color: var(--success); font-weight: bold;">✅ Jawaban Benar (\\( ${item.userAnswer} \\))</span>` 
+                : `<span style="color: var(--danger); font-weight: bold;">❌ Jawaban Salah (\\( ${item.userAnswer} \\)) - Seharusnya (\\( ${item.correctAnswer} \\))</span>`;
+
+            html += `
+                <div class="explanation-item">
+                    <h4>Soal ${item.questionNum}</h4>
+                    <div style="margin: 15px 0; overflow-x: auto;">${item.questionLatex}</div>
+                    <div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #cbd5e1;">${statusText}</div>
+                    <div style="font-size: 0.95rem; color: var(--text-main);">
+                        <strong>Pembahasan:</strong><br>${item.explanation}
+                    </div>
+                </div>
+            `;
+        });
+
+        document.getElementById('explanations-container').innerHTML = html;
+        
+        // Bersihkan data session agar bersih saat kuis diulang di lain waktu
+        sessionStorage.clear();
+    };
+</script>
+
+</body>
+</html>
