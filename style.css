@@ -1,0 +1,187 @@
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --warning: #f59e0b;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2, h3 { text-align: center; margin-bottom: 15px; }
+
+.info-panel {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+.info-panel ul { margin-left: 20px; margin-top: 5px; }
+
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f1f5f9;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.timer { color: var(--danger); font-size: 1.1rem; }
+.stats { display: flex; gap: 15px; }
+.stat-benar { color: var(--success); }
+.stat-salah { color: var(--danger); }
+
+.level-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 15px;
+}
+.lvl-1 { background-color: #10b981; } 
+.lvl-2 { background-color: #f59e0b; } 
+.lvl-3 { background-color: #ef4444; } 
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.question-box {
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+    text-align: center;
+    overflow-x: auto;
+    padding: 10px;
+}
+
+.options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option-btn {
+    background: #f1f5f9;
+    border: 2px solid #e2e8f0;
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.option-btn:hover:not(.disabled) { background: #e2e8f0; }
+.option-btn.selected {
+    border-color: var(--primary);
+    background: #eff6ff;
+}
+.option-btn.disabled { cursor: not-allowed; opacity: 0.8; }
+
+.btn-main {
+    display: block;
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-top: 25px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.btn-main:hover { background: var(--primary-hover); }
+.btn-main:disabled { background: #94a3b8; cursor: not-allowed; }
+
+.btn-next { background: var(--warning); color: #fff; }
+.btn-next:hover { background: #d97706; }
+
+.feedback-banner {
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+.feedback-correct { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.feedback-wrong { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+.hidden { display: none; }
+.result-box { text-align: center; }
+.score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0 auto 20px auto;
+    color: white;
+}
+.passed { background: var(--success); }
+.failed { background: var(--danger); }
+
+.explanation-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    text-align: left;
+}
+
+@media (max-width: 480px) {
+    .container { padding: 15px; }
+    .option-btn { font-size: 0.95rem; padding: 12px; }
+    .quiz-header { flex-direction: column; gap: 10px; }
+}
