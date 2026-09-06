@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beranda - Kuis Adaptif Limit Fungsi</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Konfigurasi MathJax untuk merender LaTeX Prasyarat -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+            startup: { typeset: true } // Langsung render saat load
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Kuis Adaptif Limit Fungsi</h1>
+    
+    <div class="info-panel">
+        <strong>Detail Kuis:</strong>
+        <ul>
+            <li><strong>Topik:</strong> Limit Pemfaktoran Aljabar, Akar Sekawan, & Trigonometri Dasar.</li>
+            <li><strong>Jumlah Soal:</strong> 10 Butir (Tingkat kesulitan menyesuaikan kemampuanmu).</li>
+            <li><strong>Waktu Maksimal:</strong> 30 Menit. Kuis otomatis ditutup jika waktu habis.</li>
+            <li><strong>KKM:</strong> Skor 80 (Minimal menjawab 8 soal dengan benar).</li>
+        </ul>
+    </div>
+
+    <div class="info-panel" style="background: #fef3c7; border-color: #fde68a;">
+        <strong>Pengetahuan Prasyarat:</strong>
+        <ul>
+            <li>Mampu memfaktorkan persamaan kuadrat bentuk \(ax^2 + bx + c\).</li>
+            <li>Mampu mengoperasikan perkalian akar sekawan.</li>
+            <li>Memahami identitas trigonometri (khususnya \(1 - \cos(ax) = 2 \sin^2(\frac{a}{2}x)\)).</li>
+        </ul>
+    </div>
+
+    <!-- Tombol untuk pindah ke halaman kuis -->
+    <button class="btn-main" onclick="window.location.href='quiz.html'">Mulai Kerjakan</button>
+</div>
+
+</body>
+</html>
