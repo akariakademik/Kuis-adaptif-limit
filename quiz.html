@@ -64,8 +64,17 @@
         return array;
     }
 
-    // Generators
+    // ==========================================
+    // PENAMBAHAN 6 POLA GENERATORS SOAL ADAPTIF
+    // ==========================================
+
+    // LEVEL 1: Mengacak antara Pemfaktoran (Pola Lama) dan Substitusi Langsung (Pola Baru)
     function generateLevel1() {
+        return Math.random() < 0.5 ? generateL1_Factoring() : generateL1_Substitution();
+    }
+
+    // Pola 1 (Lama): Pemfaktoran Aljabar
+    function generateL1_Factoring() {
         let a = getRandomInt(1, 9); let b = getRandomInt(1, 9);
         while(a === b) b = getRandomInt(1, 9);
         let sum = a + b, prod = a * b, correctAnswer = a - b;
@@ -80,7 +89,44 @@
         return { question: questionLatex, answerStr: correctAnswer.toString(), optionsArray: Array.from(options).map(String), explanation, level: 1 };
     }
 
+    // Pola 2 (Baru 1): Substitusi Langsung (Trigonometri / Pecahan Biasa)
+    function generateL1_Substitution() {
+        let isTrig = Math.random() < 0.5; // Acak bentuk Trig atau Aljabar Pecahan
+        let questionLatex, correctAnswerLatex, explanation;
+        let options = new Set();
+
+        if (isTrig) {
+            let a = getRandomInt(1, 5); let b = getRandomInt(1, 5);
+            let c = getRandomInt(1, 5); let d = getRandomInt(1, 5);
+            questionLatex = `$$ \\lim_{x \\to 0} \\frac{${a} \\cos(x) + ${b} \\sin(x)}{${c} \\cos(x) - ${d} \\sin(x)} $$`;
+            correctAnswerLatex = getFractionLatex(a, c);
+            options.add(correctAnswerLatex);
+            while(options.size < 5) options.add(getFractionLatex(getRandomInt(1, 8), getRandomInt(1, 5)));
+            
+            explanation = `Bentuk limit ini bisa diselesaikan dengan substitusi langsung (tidak menghasilkan \\(\\frac{0}{0}\\)).<br>Masukkan \\(x = 0\\), ingat bahwa \\(\\cos(0) = 1\\) dan \\(\\sin(0) = 0\\).<br>Maka:<br>$$ \\frac{${a}(1) + ${b}(0)}{${c}(1) - ${d}(0)} = \\frac{${a}}{${c}} = ${correctAnswerLatex} $$`;
+        } else {
+            let x_val = getRandomInt(1, 4);
+            let p = getRandomInt(1, 4); let q = getRandomInt(1, 5);
+            let r = getRandomInt(1, 3); let s = getRandomInt(1, 5);
+            let num = p * (x_val * x_val) - q; let den = r * x_val + s;
+            
+            questionLatex = `$$ \\lim_{x \\to ${x_val}} \\frac{${p}x^2 - ${q}}{${r}x + ${s}} $$`;
+            correctAnswerLatex = getFractionLatex(num, den);
+            options.add(correctAnswerLatex);
+            while(options.size < 5) options.add(getFractionLatex(getRandomInt(-15, 15), getRandomInt(1, 10)));
+            
+            explanation = `Limit pecahan ini dapat dikerjakan dengan substitusi langsung.<br>Masukkan nilai \\(x = ${x_val}\\) ke dalam fungsi:<br>$$ \\frac{${p}(${x_val})^2 - ${q}}{${r}(${x_val}) + ${s}} = \\frac{${p}(${x_val * x_val}) - ${q}}{${r * x_val} + ${s}} = \\frac{${num}}{${den}} = ${correctAnswerLatex} $$`;
+        }
+        return { question: questionLatex, answerStr: correctAnswerLatex, optionsArray: Array.from(options).map(String), explanation, level: 1 };
+    }
+
+    // LEVEL 2: Mengacak antara Akar Sekawan (Pola Lama) dan Pecahan Adaptif Tak Hingga (Pola Baru)
     function generateLevel2() {
+        return Math.random() < 0.5 ? generateL2_Conjugate() : generateL2_InfinityFraction();
+    }
+
+    // Pola 3 (Lama): Perkalian Akar Sekawan
+    function generateL2_Conjugate() {
         let S_options = [4, 9, 16, 25]; let S = S_options[getRandomInt(0, 3)];
         let a = getRandomInt(1, S - 1); let b = S - a; let rootS = Math.sqrt(S);
         let correctAnswerLatex = getFractionLatex(1, 2 * rootS);
@@ -90,7 +136,29 @@
         return { question: questionLatex, answerStr: correctAnswerLatex, optionsArray, explanation, level: 2 };
     }
 
+    // Pola 4 (Baru 2): Pecahan Rasional Adaptif (Limit Tak Hingga)
+    function generateL2_InfinityFraction() {
+        let a = getRandomInt(2, 7); let b = getRandomInt(1, 9); let c = getRandomInt(1, 9);
+        let p = getRandomInt(2, 7); let q = getRandomInt(1, 9); let r = getRandomInt(1, 9);
+        
+        let correctAnswerLatex = getFractionLatex(a, p);
+        let questionLatex = `$$ \\lim_{x \\to \\infty} \\frac{${a}x^2 + ${b}x - ${c}}{${p}x^2 - ${q}x + ${r}} $$`;
+
+        let options = new Set([correctAnswerLatex, getFractionLatex(b, q), getFractionLatex(-c, r), getFractionLatex(a, q), getFractionLatex(b, p)]);
+        while(options.size < 5) options.add(getFractionLatex(getRandomInt(1, 9), getRandomInt(2, 7)));
+
+        let explanation = `Bentuk pecahan limit di ketakhinggaan (\\(x \\to \\infty\\)).<br>Karena pangkat tertinggi pada pembilang (\\(x^2\\)) sama dengan pangkat tertinggi pada penyebut (\\(x^2\\)), maka nilai limitnya adalah rasio atau perbandingan koefisien pangkat tertingginya saja.<br>Koefisien \\(x^2\\) pembilang = ${a}, penyebut = ${p}.<br>$$ = \\frac{${a}}{${p}} = ${correctAnswerLatex} $$`;
+        
+        return { question: questionLatex, answerStr: correctAnswerLatex, optionsArray: Array.from(options).map(String), explanation, level: 2 };
+    }
+
+    // LEVEL 3: Mengacak antara Identitas Cos (Pola Lama) dan Fungsi Tan Pendekatan (Pola Baru)
     function generateLevel3() {
+        return Math.random() < 0.5 ? generateL3_TrigCos() : generateL3_TrigTan();
+    }
+
+    // Pola 5 (Lama): Limit Trigonometri (Identitas Cosinus)
+    function generateL3_TrigCos() {
         let a = getRandomInt(2, 6); let b = getRandomInt(1, 4); let c = getRandomInt(1, 4);
         let num = a * a, den = 2 * b * c;
         let correctAnswerLatex = getFractionLatex(num, den);
@@ -104,7 +172,33 @@
         return { question: questionLatex, answerStr: correctAnswerLatex, optionsArray: Array.from(optSet), explanation, level: 3 };
     }
 
-    // Engine & Timer
+    // Pola 6 (Baru 3): Limit Trigonometri Tan dengan limit mendekati (a) bukan 0
+    function generateL3_TrigTan() {
+        let a = getRandomInt(1, 5); let c = getRandomInt(2, 6); let d = getRandomInt(2, 4);
+        let a_sq = a * a;
+        let cx_a = c === 1 ? `(x - ${a})` : `${c}(x - ${a})`;
+        
+        let num = c; let den = 2 * a * d;
+        let correctAnswerLatex = getFractionLatex(num, den);
+        
+        let questionLatex = `$$ \\lim_{x \\to ${a}} \\frac{\\tan(${cx_a})}{${d === 1 ? '' : d}(x^2 - ${a_sq})} $$`;
+        
+        let optSet = new Set([
+            correctAnswerLatex, 
+            getFractionLatex(c, d), // Jebakan tidak memfaktorkan lengkap
+            getFractionLatex(c, a * d), // Jebakan lupa kali 2
+            getFractionLatex(1, 2 * a * d)
+        ]);
+        while(optSet.size < 5) optSet.add(getFractionLatex(getRandomInt(1, 10), getRandomInt(2, 10)));
+        
+        let explanation = `Substitusi langsung menghasilkan \\(\\frac{0}{0}\\).<br>Faktorkan penyebut: \\(x^2 - ${a_sq} = (x - ${a})(x + ${a})\\).<br>Bentuk limit menjadi:<br>$$ \\lim_{x \\to ${a}} \\frac{\\tan(${cx_a})}{${d === 1 ? '' : d}(x - ${a})(x + ${a})} $$<br>Gunakan sifat \\(\\lim_{y \\to 0} \\frac{\\tan(ky)}{my} = \\frac{k}{m}\\) (dengan menganggap \\(y = x - ${a}\\)):<br>$$ \\frac{${c}}{${d}} \\times \\lim_{x \\to ${a}} \\frac{1}{x + ${a}} = \\frac{${c}}{${d}(${a} + ${a})} = ${correctAnswerLatex} $$`;
+        
+        return { question: questionLatex, answerStr: correctAnswerLatex, optionsArray: Array.from(optSet), explanation, level: 3 };
+    }
+
+    // ==========================================
+    // Engine & Timer (Sama Persis - Tidak Diubah)
+    // ==========================================
     let currentLevel = 1, questionCount = 0, maxQuestions = 10, currentQuestionData = null, selectedOptionIndex = null;
     let history = [], score = 0, correctCount = 0, wrongCount = 0;
     
@@ -163,7 +257,7 @@
         if (questionCount === maxQuestions) document.getElementById('btn-next-question').innerText = "Selesai & Lihat Hasil Akhir";
     }
 
-    window.onload = () => { startTimer(); loadNextQuestion(); }; // Langsung jalankan saat masuk halaman
+    window.onload = () => { startTimer(); loadNextQuestion(); };
 
     function selectOption(index) {
         if(document.getElementById(`opt-${index}`).classList.contains('disabled')) return;
@@ -213,7 +307,6 @@
     function finishQuiz(isTimeout) {
         clearInterval(timerInterval);
         
-        // Simpan semua data report ke Session Storage
         sessionStorage.setItem("quizScore", score);
         sessionStorage.setItem("correctCount", correctCount);
         sessionStorage.setItem("wrongCount", wrongCount);
@@ -221,7 +314,6 @@
         sessionStorage.setItem("quizHistory", JSON.stringify(history));
         sessionStorage.setItem("isTimeout", isTimeout);
 
-        // Lempar ke halaman hasil
         window.location.href = 'result.html';
     }
 </script>
