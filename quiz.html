@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mengerjakan Kuis - Limit Fungsi</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+            startup: { typeset: false } // Manual trigger saat soal berganti
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div class="quiz-header">
+        <div class="timer">⏱️ Waktu: <span id="timer-display">30:00</span></div>
+        <div class="stats">
+            <span class="stat-benar">✅ Benar: <span id="stat-correct">0</span></span>
+            <span class="stat-salah">❌ Salah: <span id="stat-wrong">0</span></span>
+        </div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress-bar-fill"></div></div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span id="question-counter" style="font-weight: bold; color: var(--text-muted);">Soal 1/10</span>
+        <span id="level-indicator" class="level-badge lvl-1">Level 1 (Easy)</span>
+    </div>
+
+    <div class="question-box" id="question-text"></div>
+    <div class="options-grid" id="options-container"></div>
+    
+    <div id="feedback-container" class="feedback-banner hidden"></div>
+
+    <button class="btn-main" id="btn-submit" onclick="submitAnswer()" disabled>Cek Jawaban</button>
+    <button class="btn-main btn-next hidden" id="btn-next-question" onclick="processNextQuestion()">Lanjut Soal Berikutnya ➔</button>
+</div>
+
+<script>
+    // Utils
+    function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    
+    function getFractionLatex(num, den) {
+        if (num === 0) return "0";
+        let sign = (num * den < 0) ? "-" : "";
+        num = Math.abs(num); den = Math.abs(den);
+        let gcd = function(a, b) { return b ? gcd(b, a % b) : a; };
+        let g = gcd(num, den);
+        num /= g; den /= g;
+        if (den === 1) return sign + num;
+        return sign + "\\frac{" + num + "}{" + den + "}";
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // Generators
+    function generateLevel1() {
+        let a = getRandomInt(1, 9); let b = getRandomInt(1, 9);
+        while(a === b) b = getRandomInt(1, 9);
+        let sum = a + b, prod = a * b, correctAnswer = a - b;
+        let questionLatex = `$$ \\lim_{x \\to ${a}} \\frac{x^2 - ${sum}x + ${prod}}{x - ${a}} $$`;
+        
+        let options = new Set([correctAnswer]);
+        while(options.size < 5) {
+            let distractor = getRandomInt(-15, 15);
+            if (distractor !== correctAnswer) options.add(distractor);
+        }
+        let explanation = `Substitusi langsung \\(x = ${a}\\) menghasilkan \\(\\frac{0}{0}\\).<br>Faktorkan pembilang: \\(x^2 - ${sum}x + ${prod} = (x - ${a})(x - ${b})\\)<br><br>Maka:<br>$$ \\lim_{x \\to ${a}} \\frac{(x - ${a})(x - ${b})}{x - ${a}} = \\lim_{x \\to ${a}} (x - ${b}) = ${a} - ${b} = ${correctAnswer} $$`;
+        return { question: questionLatex, answerStr: correctAnswer.toString(), optionsArray: Array.from(options).map(String), explanation, level: 1 };
+    }
+
+    function generateLevel2() {
+        let S_options = [4, 9, 16, 25]; let S = S_options[getRandomInt(0, 3)];
+        let a = getRandomInt(1, S - 1); let b = S - a; let rootS = Math.sqrt(S);
+        let correctAnswerLatex = getFractionLatex(1, 2 * rootS);
+        let questionLatex = `$$ \\lim_{x \\to ${a}} \\frac{\\sqrt{x + ${b}} - ${rootS}}{x - ${a}} $$`;
+        let optionsArray = [correctAnswerLatex, getFractionLatex(1, rootS), getFractionLatex(-1, 2 * rootS), rootS.toString(), getFractionLatex(1, a)];
+        let explanation = `Substitusi langsung \\(\\frac{0}{0}\\). Kalikan sekawan:<br>$$ \\lim_{x \\to ${a}} \\frac{\\sqrt{x + ${b}} - ${rootS}}{x - ${a}} \\times \\frac{\\sqrt{x + ${b}} + ${rootS}}{\\sqrt{x + ${b}} + ${rootS}} $$ $$ = \\lim_{x \\to ${a}} \\frac{1}{\\sqrt{x + ${b}} + ${rootS}} = \\frac{1}{${rootS} + ${rootS}} = ${correctAnswerLatex} $$`;
+        return { question: questionLatex, answerStr: correctAnswerLatex, optionsArray, explanation, level: 2 };
+    }
+
+    function generateLevel3() {
+        let a = getRandomInt(2, 6); let b = getRandomInt(1, 4); let c = getRandomInt(1, 4);
+        let num = a * a, den = 2 * b * c;
+        let correctAnswerLatex = getFractionLatex(num, den);
+        let bx = b === 1 ? "x" : b + "x"; let cx = c === 1 ? "x" : c + "x";
+        let questionLatex = `$$ \\lim_{x \\to 0} \\frac{1 - \\cos(${a}x)}{${bx} \\sin(${cx})} $$`;
+        
+        let optSet = new Set([correctAnswerLatex, getFractionLatex(num, b * c), getFractionLatex(a, 2 * b * c), getFractionLatex(-num, den), getFractionLatex(2 * num, b * c)]);
+        while(optSet.size < 5) optSet.add(getFractionLatex(getRandomInt(1,10), getRandomInt(2,8)));
+        
+        let explanation = `Gunakan identitas: \\(1 - \\cos(Ax) = 2 \\sin^2(\\frac{A}{2}x)\\).<br>Bentuk limit menjadi:<br>$$ \\lim_{x \\to 0} \\frac{2 \\sin^2(${a/2}x)}{${bx} \\sin(${cx})} = \\frac{2 \\times (${a/2})^2}{${b} \\times ${c}} = ${correctAnswerLatex} $$`;
+        return { question: questionLatex, answerStr: correctAnswerLatex, optionsArray: Array.from(optSet), explanation, level: 3 };
+    }
+
+    // Engine & Timer
+    let currentLevel = 1, questionCount = 0, maxQuestions = 10, currentQuestionData = null, selectedOptionIndex = null;
+    let history = [], score = 0, correctCount = 0, wrongCount = 0;
+    
+    let timeElapsed = 0; // Catat waktu yang dihabiskan
+    let totalTime = 30 * 60; // 30 Menit dalam detik
+    let timerInterval;
+
+    function formatTime(seconds) {
+        let m = Math.floor(seconds / 60); let s = seconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        document.getElementById('timer-display').innerText = formatTime(totalTime);
+        timerInterval = setInterval(() => {
+            totalTime--; timeElapsed++;
+            document.getElementById('timer-display').innerText = formatTime(totalTime);
+            if (totalTime <= 300) {
+                document.getElementById('timer-display').style.color = "var(--danger)";
+            }
+            if (totalTime <= 0) {
+                clearInterval(timerInterval);
+                finishQuiz(true); // Timeout
+            }
+        }, 1000);
+    }
+
+    function loadNextQuestion() {
+        selectedOptionIndex = null;
+        document.getElementById('btn-submit').classList.remove('hidden');
+        document.getElementById('btn-submit').disabled = true;
+        document.getElementById('btn-next-question').classList.add('hidden');
+        document.getElementById('feedback-container').classList.add('hidden');
+
+        questionCount++;
+        document.getElementById('question-counter').innerText = `Soal ${questionCount}/${maxQuestions}`;
+        document.getElementById('progress-bar-fill').style.width = `${(questionCount / maxQuestions) * 100}%`;
+        
+        let badge = document.getElementById('level-indicator');
+        badge.className = `level-badge lvl-${currentLevel}`;
+        badge.innerText = `Level ${currentLevel}`;
+
+        currentQuestionData = currentLevel === 1 ? generateLevel1() : currentLevel === 2 ? generateLevel2() : generateLevel3();
+        document.getElementById('question-text').innerHTML = currentQuestionData.question;
+
+        let optionsHtml = ''; let labels = ['A', 'B', 'C', 'D', 'E'];
+        let shuffledOptions = shuffleArray([...currentQuestionData.optionsArray]);
+        currentQuestionData.shuffledOptions = shuffledOptions; 
+
+        shuffledOptions.forEach((opt, idx) => {
+            optionsHtml += `<div class="option-btn" id="opt-${idx}" onclick="selectOption(${idx})"><strong style="margin-right: 15px;">${labels[idx]}.</strong> \\( ${opt} \\)</div>`;
+        });
+        document.getElementById('options-container').innerHTML = optionsHtml;
+
+        MathJax.typesetPromise().catch((err) => console.log(err.message));
+        if (questionCount === maxQuestions) document.getElementById('btn-next-question').innerText = "Selesai & Lihat Hasil Akhir";
+    }
+
+    window.onload = () => { startTimer(); loadNextQuestion(); }; // Langsung jalankan saat masuk halaman
+
+    function selectOption(index) {
+        if(document.getElementById(`opt-${index}`).classList.contains('disabled')) return;
+        selectedOptionIndex = index;
+        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+        document.getElementById(`opt-${index}`).classList.add('selected');
+        document.getElementById('btn-submit').disabled = false;
+    }
+
+    function submitAnswer() {
+        let userPicked = currentQuestionData.shuffledOptions[selectedOptionIndex];
+        let isCorrect = (userPicked === currentQuestionData.answerStr);
+
+        if (isCorrect) { correctCount++; score += 10; } else { wrongCount++; }
+        
+        document.getElementById('stat-correct').innerText = correctCount;
+        document.getElementById('stat-wrong').innerText = wrongCount;
+
+        let feedbackEl = document.getElementById('feedback-container');
+        if (isCorrect) {
+            feedbackEl.className = "feedback-banner feedback-correct";
+            feedbackEl.innerHTML = "✅ TEPAT! Jawaban kamu benar.";
+            currentLevel = Math.min(3, currentLevel + 1);
+        } else {
+            feedbackEl.className = "feedback-banner feedback-wrong";
+            feedbackEl.innerHTML = "❌ KURANG TEPAT! Penjelasan akan terbuka di halaman hasil.";
+            currentLevel = Math.max(1, currentLevel - 1);
+        }
+        feedbackEl.classList.remove('hidden');
+
+        history.push({
+            questionNum: questionCount, questionLatex: currentQuestionData.question,
+            userAnswer: userPicked, correctAnswer: currentQuestionData.answerStr,
+            isCorrect: isCorrect, explanation: currentQuestionData.explanation, level: currentLevel
+        });
+
+        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('disabled'));
+        document.getElementById('btn-submit').classList.add('hidden');
+        document.getElementById('btn-next-question').classList.remove('hidden');
+    }
+
+    function processNextQuestion() {
+        if (questionCount < maxQuestions) loadNextQuestion();
+        else finishQuiz(false);
+    }
+
+    function finishQuiz(isTimeout) {
+        clearInterval(timerInterval);
+        
+        // Simpan semua data report ke Session Storage
+        sessionStorage.setItem("quizScore", score);
+        sessionStorage.setItem("correctCount", correctCount);
+        sessionStorage.setItem("wrongCount", wrongCount);
+        sessionStorage.setItem("timeElapsed", timeElapsed);
+        sessionStorage.setItem("quizHistory", JSON.stringify(history));
+        sessionStorage.setItem("isTimeout", isTimeout);
+
+        // Lempar ke halaman hasil
+        window.location.href = 'result.html';
+    }
+</script>
+</body>
+</html>
