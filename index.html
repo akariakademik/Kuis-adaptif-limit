@@ -3,45 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beranda - Kuis Adaptif Limit Fungsi</title>
+    <title>Kuis Adaptif Limit Fungsi</title>
     <link rel="stylesheet" href="style.css">
     
     <!-- Konfigurasi MathJax untuk merender LaTeX Prasyarat -->
     <script>
         window.MathJax = {
             tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
-            startup: { typeset: true } // Langsung render saat load
+            startup: { typeset: false } // Ditunda render-nya sampai panel intro muncul
         };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Kuis Adaptif Limit Fungsi</h1>
-    
-    <div class="info-panel">
-        <strong>Detail Kuis:</strong>
-        <ul>
-            <li><strong>Topik:</strong> Limit Pemfaktoran Aljabar, Akar Sekawan, & Trigonometri Dasar.</li>
-            <li><strong>Jumlah Soal:</strong> 10 Butir (Tingkat kesulitan menyesuaikan kemampuanmu).</li>
-            <li><strong>Waktu Maksimal:</strong> 30 Menit. Kuis otomatis ditutup jika waktu habis.</li>
-            <li><strong>KKM:</strong> Skor 80 (Minimal menjawab 8 soal dengan benar).</li>
-        </ul>
+
+    <!-- BAGIAN 1: FORM INPUT DATA (Tampil Pertama) -->
+    <div id="form-section">
+        <h2 style="text-align: center; margin-bottom: 10px;">Isi Data Diri</h2>
+        <p style="color: var(--text-muted); margin-bottom: 25px; text-align: center;">Mohon lengkapi data berikut sebelum mengakses kuis persiapan UTBK/SNBT.</p>
+
+        <form id="registration-form" onsubmit="submitData(event)">
+            <div class="form-group">
+                <label for="nama">Nama Lengkap *</label>
+                <input type="text" id="nama" class="form-control" required placeholder="Masukkan nama lengkap Anda">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" class="form-control" required placeholder="email@contoh.com">
+            </div>
+
+            <div class="form-group">
+                <label for="sekolah">Asal Sekolah *</label>
+                <input type="text" id="sekolah" class="form-control" required placeholder="Misal: SMAN 1 Surabaya">
+            </div>
+
+            <div class="form-group">
+                <label for="bimbel">Sudah pernah bimbel dimana? *</label>
+                <input type="text" id="bimbel" class="form-control" required placeholder="Misal: Belum pernah / Nama Bimbel">
+            </div>
+
+            <button type="submit" class="btn-main" id="btn-submit">Simpan & Lanjutkan</button>
+        </form>
     </div>
 
-    <div class="info-panel" style="background: #fef3c7; border-color: #fde68a;">
-        <strong>Pengetahuan Prasyarat:</strong>
-        <ul>
-            <li>Mampu memfaktorkan persamaan kuadrat bentuk \(ax^2 + bx + c\).</li>
-            <li>Mampu mengoperasikan perkalian akar sekawan.</li>
-            <li>Memahami identitas trigonometri (khususnya \(1 - \cos(ax) = 2 \sin^2(\frac{a}{2}x)\)).</li>
-        </ul>
+    <!-- BAGIAN 2: INTRO KUIS (Disembunyikan dulu sebelum form disubmit) -->
+    <div id="intro-section" style="display: none;">
+        <h1 id="welcome-title">Kuis Adaptif Limit Fungsi</h1>
+        
+        <div class="info-panel">
+            <strong>Detail Kuis:</strong>
+            <ul>
+                <li><strong>Topik:</strong> Limit Pemfaktoran Aljabar, Akar Sekawan, & Trigonometri Dasar.</li>
+                <li><strong>Jumlah Soal:</strong> 10 Butir (Tingkat kesulitan menyesuaikan kemampuanmu).</li>
+                <li><strong>Waktu Maksimal:</strong> 30 Menit. Kuis otomatis ditutup jika waktu habis.</li>
+                <li><strong>KKM:</strong> Skor 80 (Minimal menjawab 8 soal dengan benar).</li>
+            </ul>
+        </div>
+
+        <div class="info-panel" style="background: #fef3c7; border-color: #fde68a;">
+            <strong>Pengetahuan Prasyarat:</strong>
+            <ul>
+                <li>Mampu memfaktorkan persamaan kuadrat bentuk \(ax^2 + bx + c\).</li>
+                <li>Mampu mengoperasikan perkalian akar sekawan.</li>
+                <li>Memahami identitas trigonometri (khususnya \(1 - \cos(ax) = 2 \sin^2(\frac{a}{2}x)\)).</li>
+            </ul>
+        </div>
+
+        <!-- Tombol untuk pindah ke halaman kuis -->
+        <button class="btn-main" onclick="window.location.href='quiz.html'">Mulai Kerjakan Kuis</button>
     </div>
 
-    <!-- Tombol untuk pindah ke halaman kuis -->
-    <button class="btn-main" onclick="window.location.href='quiz.html'">Mulai Kerjakan</button>
 </div>
+
+<!-- Animasi Loading saat mengirim data ke spreadsheet -->
+<div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+    Menyimpan data Anda...
+</div>
+
+<script>
+    async function submitData(event) {
+        event.preventDefault(); // Mencegah form melakukan refresh halaman
+
+        // ⚠️ JANGAN LUPA: Ganti URL di bawah dengan URL Web App Apps Script Anda
+        const scriptURL = https://script.google.com/macros/s/AKfycbyvjm5UiRendSAUYmrrF1tjVEPh0isAf4XhTl0NnkCSIxaEgegsOick5sJz7d_iaA_hfw/exec; 
+
+        // Tampilkan loading screen
+        document.getElementById('loading-overlay').style.display = 'flex';
+        document.getElementById('btn-submit').disabled = true;
+
+        // Ambil nilai dari form
+        const formData = {
+            nama: document.getElementById('nama').value,
+            email: document.getElementById('email').value,
+            sekolah: document.getElementById('sekolah').value,
+            bimbel: document.getElementById('bimbel').value
+        };
+
+        try {
+            // Kirim data ke Google Sheets via Apps Script
+            const response = await fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(formData),
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.result === 'success') {
+                // Simpan nama ke sessionStorage untuk dipakai jika dibutuhkan
+                sessionStorage.setItem('studentName', formData.nama);
+                
+                // Sembunyikan loading
+                document.getElementById('loading-overlay').style.display = 'none';
+
+                // Transisi tampilan: Sembunyikan Form, Tampilkan Intro Kuis
+                document.getElementById('form-section').style.display = 'none';
+                document.getElementById('intro-section').style.display = 'block';
+
+                // Ubah judul sapaan dengan nama siswa
+                document.getElementById('welcome-title').innerText = `Halo, ${formData.nama}! — Kuis Adaptif Limit`;
+
+                // Render ulang MathJax karena elemen baru saja dimunculkan ke DOM
+                if (window.MathJax) {
+                    MathJax.typesetPromise().catch((err) => console.log(err.message));
+                }
+
+                // Scroll ke atas halaman secara halus
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } else {
+                alert('Terjadi kesalahan saat menyimpan data: ' + result.message);
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('btn-submit').disabled = false;
+            }
+        } catch (error) {
+            console.error('Error!', error.message);
+            alert('Gagal terhubung ke server. Pastikan koneksi internet Anda stabil.');
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('btn-submit').disabled = false;
+        }
+    }
+</script>
 
 </body>
 </html>
