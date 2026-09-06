@@ -80,7 +80,7 @@
         document.getElementById('report-correct').innerText = correctCount;
         document.getElementById('report-wrong').innerText = wrongCount;
 
-        // Analisis Titik Lemah (Topik yang paling banyak salah dijawab)
+        // Analisis Titik Lemah
         let mistakesByLevel = { 1: 0, 2: 0, 3: 0 };
         history.forEach(item => {
             if(!item.isCorrect) mistakesByLevel[item.level]++;
@@ -123,6 +123,11 @@
         });
 
         document.getElementById('explanations-container').innerHTML = html;
+        
+        // BAGAIMAN TERPENTING: Render ulang MathJax setelah DOM dimanipulasi
+        if (window.MathJax) {
+            MathJax.typesetPromise().catch((err) => console.log(err.message));
+        }
         
         // Bersihkan data session agar bersih saat kuis diulang di lain waktu
         sessionStorage.clear();
